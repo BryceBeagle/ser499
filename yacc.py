@@ -83,7 +83,11 @@ def p_expr(p):
 def p_value(p):
     """value : atom
              | value trailer"""
-    p[0] = p[1]
+    if len(p) == 2:
+        p[0] = p[1]
+    else:
+        p[0] = p[2]
+        p[0]['func'] = p[1]
 
 
 def p_bin_op(p):
