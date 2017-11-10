@@ -187,7 +187,7 @@ def p_expr_list(p):
 
 
 def p_item_list(p):
-    """item_list : atom
+    """item_list : expr
                  | item_list COMMA item_list"""
     if len(p) == 2:
         p[0] = {'token_type' : 'item_list',
@@ -203,7 +203,10 @@ def p_atom(p):
             | STRING
             | NONE
             | TRUE
-            | FALSE"""
+            | FALSE
+            | list
+            | tuple
+            | dict"""
     p[0] = p[1]
 
 
@@ -331,7 +334,7 @@ def getParseTree():
 
         with open("input.py") as fi:
             s = "\n".join(fi.readlines()) + "\u0004"
-        result = parser.parse(s, lexer=lexer)
+        result = parser.parse(s, lexer=lexer, debug=True)
         return result
 
     except EOFError:

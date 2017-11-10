@@ -32,3 +32,7 @@ def max_sub_array(array):
 
 a = 5
 b = 7
+
+c = [10, 4, 6, 6]
+
+max_sub_array(c)
