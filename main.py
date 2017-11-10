@@ -87,7 +87,15 @@ def typed_st(ast, st):
             typed_st(stmt, st)
             funcs.pop()
         elif stmt['token_type'] == 'for_stmt':
-            pass
+            iterator = stmt['iterator']['value']
+            if isinstance(iterator, dict):
+                if iterator['token_type'] == 'func':
+                    if iterator['func'] == 'enumerate':
+                        counter = stmt['expr_list'][0]
+                        update(st, funcs + [counter], (int, 0))
+                iter_item = stmt['expr_list'][-1]
+                update(st, funcs + [iter_item], ({"find"}, None))
+
         else:
             print(stmt['token_type'])
 

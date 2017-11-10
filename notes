@@ -1,0 +1,17 @@
+a *= "string"          -> a = string
+a += "string"          -> a = string
+
+"string" *= a          -> a = string or int
+"string" += a          -> a = string
+
+5 += a                 -> a = int or float
+5 *= a                 -> a = int or float
+5 /= a                 -> a = int or float
+
+a.                     -> a = list or tuple or dict or string
+
+a, b in enumerate(c)   -> c = list or tuple or dict or string
+                       -> b = ???
+                       -> a = int
+
+a, b in c              -> c = list or tuple or dict or string
