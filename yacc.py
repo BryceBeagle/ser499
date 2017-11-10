@@ -212,14 +212,14 @@ def p_atom(p):
 
 def p_list(p):
     """list : LBRACKET item_list RBRACKET"""
-    p[0] = {'token_type' : 'list',
-            'item_list'  : p[2]  }
+    p[0] = {'token_type' : 'list'           ,
+            'item_list'  : p[2]['item_list']}
 
 
 def p_tuple(p):
     """tuple : LPAREN item_list RPAREN"""
-    p[0] = {'token_type' : 'tuple',
-            'item_list'  : p[2]  }
+    p[0] = {'token_type' : 'tuple'          ,
+            'item_list'  : p[2]['item_list']}
 
 
 def p_dict(p):
