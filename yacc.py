@@ -47,9 +47,16 @@ def p_stmt(p):
 
 def p_assign_stmt(p):
     """assign_stmt : NAME ASSIGN expr"""
+    if p[3]['token_type'] == "value":
+        value  = p[3]['value' ]
+        negate = p[3]['negate']
+    else:
+        value  = p[3]
+        negate = False
     p[0] = {'token_type' : 'assign_stmt',
             'name'       : p[1]         ,
-            'value'      : p[3]         }
+            'value'      : value        ,
+            'negate'     : negate       }
 
 
 def p_expr(p):
@@ -57,11 +64,15 @@ def p_expr(p):
             | PLUS expr
             | MINUS expr
             | expr bin_op expr"""
-    if len(p) <= 3:
+    if len(p) == 2:
         p[0] = {'token_type' : 'value',
-                'value'      : p[len(p) - 1]   }
+                'value'      : p[1]   ,
+                'negate'     : False  }
     elif len(p) == 3:
-        p[0]['sign'] = p[1]
+        negate = True if p[1] == '-' else False
+        p[0] = {'token_type' : 'value'                 ,
+                'value'      : p[2]['value']           ,
+                'negate'     : negate != p[2]['negate']}  # Negatives cancel out
     else:
         p[0] = {'token_type' : 'expr',
                 'operator'   : p[2]  ,
@@ -72,7 +83,7 @@ def p_expr(p):
 def p_value(p):
     """value : atom
              | value trailer"""
-    p[0] = p[1]  # TODO: Don't consume previous value
+    p[0] = p[1]
 
 
 def p_bin_op(p):

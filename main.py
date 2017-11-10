@@ -1,6 +1,7 @@
-from pprint import pprint
+from   pprint  import pprint
+import numbers
 
-from yacc   import getParseTree
+from   yacc    import getParseTree
 
 
 def iterAST(dict_):
@@ -20,18 +21,29 @@ def iterAST(dict_):
             st[func_name] = iterAST(elem)
             st[func_name].update(dict.fromkeys(elem['args_list']))  # Defaults to None value
 
-        # Assign statements are only statement where a variable is created
+        # Assign statements are only statement where a variable is created other than for and with blocks
         # Ignoring __setattr__
         elif elem['token_type'] in ['assign_stmt']:
             item_name = elem['name']
 
             # TODO: Need initial values
-            st[item_name] = None
+            value = elem['value']
+
+            if 'negate' in elem and elem['negate'] is True:
+                if isinstance(value, numbers.Number):
+                    value = -value
+                else:
+                    value = {'value'  : value,
+                             'negate' : True }
+
+            st[item_name] = value
 
         # Use variables created in for loop declaration
         elif elem['token_type'] == 'for_stmt':
             st = {**iterAST(elem), **st}
             st.update(dict.fromkeys(elem['expr_list']))
+
+        # TODO: with
     return st
 
 
