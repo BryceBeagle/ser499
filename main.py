@@ -1,10 +1,11 @@
-from   pprint  import pprint
+import collections
+from   pprint      import pprint
 import numbers
 
-from   yacc    import getParseTree
+from   yacc        import getParseTree
 
 
-def iterAST(dict_):
+def createAST(dict_):
     """
     Create a symbol table using the Syntax Tree
 
@@ -18,7 +19,7 @@ def iterAST(dict_):
         # Ignoring classes
         if elem['token_type'] == 'func_def':
             func_name = elem['name']
-            st[func_name] = iterAST(elem)
+            st[func_name] = createAST(elem)
             st[func_name].update(dict.fromkeys(elem['args_list']))  # Defaults to None value
 
         # Assign statements are only statement where a variable is created other than for and with blocks
@@ -40,13 +41,67 @@ def iterAST(dict_):
 
         # Use variables created in for loop declaration
         elif elem['token_type'] == 'for_stmt':
-            st = {**iterAST(elem), **st}
+            st = {**createAST(elem), **st}
             st.update(dict.fromkeys(elem['expr_list']))
 
         # TODO: with
     return st
 
 
-ast = getParseTree()
-symbol_table = iterAST(ast)
-pprint(symbol_table)
+def update(dict_, stack, value):
+
+    if not len(stack):
+        return value
+
+    elem = stack.pop(0)
+    dict_[elem] = update(dict_.get(elem), stack, value)
+    return dict_
+
+
+def det_type(value):
+    if isinstance(value, dict):
+        # List item, type will be whatever is first index type
+        if value['token_type'] == 'list':
+            return list, det_type(value['item_list'][0])
+        if value['token_type'] == 'value':
+            return det_type(value['value'])
+        else:
+            pprint("what now")
+    if isinstance(value, numbers.Number):
+        return int
+    if isinstance(value, str):
+        return str
+
+
+funcs = []
+def typed_st(ast, st):
+    stmt_list = ast['stmt_list']
+
+    for stmt in stmt_list:
+        if stmt['token_type'] == 'assign_stmt':
+            val = stmt['value']
+            type_val = det_type(val), val
+            update(st, funcs + [stmt['name']], type_val)
+        elif stmt['token_type'] == 'func_def':
+            funcs.append(stmt['name'])
+            typed_st(stmt, st)
+            funcs.pop()
+        elif stmt['token_type'] == 'for_stmt':
+            pass
+        else:
+            print(stmt['token_type'])
+
+    return st
+
+print()
+print()
+print()
+print()
+print()
+print()
+print()
+parse_tree = getParseTree()
+symbol_table = createAST(parse_tree)
+
+typed_ast = typed_st(parse_tree, symbol_table)
+pprint(typed_ast)
