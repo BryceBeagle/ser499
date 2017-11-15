@@ -21,19 +21,20 @@ def get_tacs(stmt, level=0):
 
     if not isinstance(value, dict):
         if stmt['token_type'] == 'value':
-            return value
+            return value, level - 1
 
         else:
             print(f"{name} = {value}")
 
     elif value['token_type'] == 'expr':
         if 'operator' in value:
-            left  = get_tacs(value['value_left' ], level + 1)
-            right = get_tacs(value['value_right'], level + 1)
+            left , level = get_tacs(value['value_left' ], level + 1)
+            right, level = get_tacs(value['value_right'], level + 1)
             op    = value['operator']
             print(f"{name} = {left} {op} {right}")
         else:
             print(f"Expr Value: {value}")
 
-    if level > 0:
-        return name
+    return name, level
+    # if level > 0:
+    #     pass
