@@ -63,8 +63,11 @@ def p_expr(p):
     """expr : value
             | PLUS expr
             | MINUS expr
-            | expr bin_op expr"""
-    if len(p) == 2:
+            | expr bin_op expr
+            | LPAREN expr RPAREN"""
+    if len(p) == 2 or p[1] == '(':
+        if p[1] == '(':  # Cheaty way to ignore the parentheses
+            p[1] = p[2]
         p[0] = {'token_type' : 'value',
                 'value'      : p[1]   ,
                 'negate'     : False  }
@@ -191,7 +194,8 @@ def p_expr_list(p):
 
 
 def p_item_list(p):
-    """item_list : expr
+    """item_list : expr COMMA
+                 | item_list COMMA expr
                  | item_list COMMA item_list"""
     if len(p) == 2:
         p[0] = {'token_type' : 'item_list',
