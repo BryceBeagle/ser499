@@ -11,13 +11,13 @@ def get_tacs(stmt, level=0):
 
     # TODO: Negatives (0 - val)
 
+    value = stmt
+    name = f"t{level - 1}"
+
     if 'value' in stmt:
         value = stmt['value']
         if 'name' in stmt:
             name = stmt['name']
-    else:
-        value = stmt
-        name = f"t{level - 1}"
 
     if not isinstance(value, dict):
         if stmt['token_type'] == 'value':
