@@ -5,6 +5,14 @@ def create_tac(pt):
     for stmt in pt['stmt_list']:
         if stmt['token_type'] == 'assign_stmt':
             get_tacs(stmt)
+        elif stmt['token_type'] == 'func_def':
+            print(f"Label: {stmt['name']}")
+            create_tac(stmt)
+            print()
+        elif stmt['token_type'] == 'for_stmt':
+            print("FOR STATEMENTS NOT IMPLEMENTED")
+        else:
+            print(stmt)
 
 
 def get_tacs(stmt, level=0):
@@ -35,6 +43,16 @@ def get_tacs(stmt, level=0):
         else:
             print(f"Expr Value: {value}")
 
+    elif value['token_type'] in ['list', 'tuple']:
+        # TODO: Expressions in lists use negative temp vars....?
+        level += 1
+        pointer = f"t{level}"
+        level += 1
+        address = f"t{level}"
+        print(f"{pointer} = &{name}")
+        for i, item in enumerate(value['item_list']):
+            val, level = get_tacs(item)
+            print(f"{address} = {pointer} + {i * 8}")
+            print(f"*{address} = {val}")
+
     return name, level
-    # if level > 0:
-    #     pass
