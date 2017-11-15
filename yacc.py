@@ -194,8 +194,7 @@ def p_expr_list(p):
 
 
 def p_item_list(p):
-    """item_list : expr COMMA
-                 | item_list COMMA expr
+    """item_list : expr
                  | item_list COMMA item_list"""
     if len(p) == 2:
         p[0] = {'token_type' : 'item_list',
