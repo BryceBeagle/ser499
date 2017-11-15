@@ -32,6 +32,7 @@ def max_sub_array(array):
 
 a = 5
 b = 7
+a = -b
 
 d  = "test string"
 

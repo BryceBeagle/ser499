@@ -70,7 +70,10 @@ def det_type(value):
     if isinstance(value, numbers.Number):
         return int
     if isinstance(value, str):
-        return str
+        if value[0] == value[-1] == '"':
+            return str
+        else:
+            return "var"
 
 
 funcs = []
