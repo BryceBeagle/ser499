@@ -336,9 +336,10 @@ def getParseTree():
 
     try:
 
-        with open("input.py") as fi:
+        with open("input2.py") as fi:
             s = "\n".join(fi.readlines()) + "\u0004"
-        result = parser.parse(s, lexer=lexer, debug=True)
+        # result = parser.parse(s, lexer=lexer, debug=True)
+        result = parser.parse(s, lexer=lexer)
         return result
 
     except EOFError:
