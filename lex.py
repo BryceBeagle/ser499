@@ -33,18 +33,21 @@ tokens = ('NUMBER'     , 'NAME'        ,
           'STRING',
           'NONE',
           'TRUE', 'FALSE',
-          'ENDMARKER')
+          'ENDMARKER',
 
-keywords = {'if'    : 'IF'   ,
-            'else'  : 'ELSE' ,
-            'elif'  : 'ELIF' ,
-            'while' : 'WHILE',
-            'for'   : 'FOR'  ,
-            'True'  : 'TRUE' ,
-            'False' : 'FALSE',
-            'def'   : 'DEF'  ,
-            'pass'  : 'PASS' ,
-            'in'    : 'IN'}
+          'RETURN')
+
+keywords = {'if'     : 'IF'    ,
+            'else'   : 'ELSE'  ,
+            'elif'   : 'ELIF'  ,
+            'while'  : 'WHILE' ,
+            'for'    : 'FOR'   ,
+            'True'   : 'TRUE'  ,
+            'False'  : 'FALSE' ,
+            'def'    : 'DEF'   ,
+            'pass'   : 'PASS'  ,
+            'in'     : 'IN'    ,
+            'return' : 'RETURN'}
 
 # Regex rules
 t_PLUS        = r"\+"

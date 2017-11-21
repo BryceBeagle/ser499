@@ -37,7 +37,8 @@ def p_stmt(p):
             | func_def
             | for_stmt
             | if_stmt
-            | expr"""
+            | expr
+            | return"""
     if p[1]['token_type'] == 'stmt':
         p[0] = p[1]
     else:
@@ -331,6 +332,12 @@ def p_trailer(p):
     elif p[1]["token_type"] == 'list':
         p[0] = {'token_type' : "get_attr",
                 'parameters' : p[1]['item_list']}
+
+
+def p_return(p):
+    """return : RETURN value"""
+    p[0] = {'token_type' : "return",
+            'value'      : p[2]    }
 
 
 def getParseTree():
