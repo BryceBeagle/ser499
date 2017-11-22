@@ -10,10 +10,12 @@ def p_program(p):
                | stmt_list ENDMARKER"""
     if p[1]['token_type'] == 'stmt_list':
         p[0] = {'token_type' : "PROGRAM"        ,
-                'stmt_list'  : p[1]['stmt_list']}
+                'stmt_list'  : p[1]['stmt_list'],
+                'name'       : "main"           }
     else:
         p[0] = {'token_type' : "PROGRAM",
-                'stmt_list'  : p[1]     }
+                'stmt_list'  : p[1]     ,
+                'name'       : "main"   }
 
 
 def p_stmt_list(p):

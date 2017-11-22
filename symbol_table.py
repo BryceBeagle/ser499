@@ -16,10 +16,12 @@ def det_type(value):
         # List item, type will be whatever is first index type
         if value['token_type'] == 'list':
             return list, det_type(value['item_list'][0])
-        if value['token_type'] == 'value':
+        elif value['token_type'] == 'value':
             return det_type(value['value'])
         else:
-            print("what now")
+            # TODO
+            pass
+            # print("what now")
     if isinstance(value, numbers.Number):
         return int
     if isinstance(value, str):
@@ -50,18 +52,7 @@ def create_st(ast):
             # Ignoring __setattr__
             elif elem['token_type'] in ['assign_stmt']:
                 item_name = elem['name']
-
-                # TODO: Need initial values
-                value = elem['value']
-
-                if 'negate' in elem and elem['negate'] is True:
-                    if isinstance(value, numbers.Number):
-                        value = -value
-                    else:
-                        value = {'value'  : value,
-                                 'negate' : True }
-
-                st[item_name] = value
+                st[item_name] = None
 
             # Use variables created in for loop declaration
             elif elem['token_type'] == 'for_stmt':
@@ -78,7 +69,7 @@ def create_st(ast):
         for stmt in stmt_list:
             if stmt['token_type'] == 'assign_stmt':
                 val = stmt['value']
-                type_val = det_type(val), val
+                type_val = [det_type(val), val, None]
                 update(st, funcs + [stmt['name']], type_val)
             elif stmt['token_type'] == 'func_def':
                 funcs.append(stmt['name'])
@@ -92,10 +83,12 @@ def create_st(ast):
                             counter = stmt['expr_list'][0]
                             update(st, funcs + [counter], (int, 0))
                     iter_item = stmt['expr_list'][-1]
-                    update(st, funcs + [iter_item], ({"find"}, None))
+                    update(st, funcs + [iter_item], [{"find"}, None, None])
 
             else:
-                print(stmt['token_type'])
+                # TODO
+                pass
+                # print(stmt['token_type'])
 
         return st
 
