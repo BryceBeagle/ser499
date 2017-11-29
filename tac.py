@@ -2,7 +2,7 @@ NUM_TEMPS = 10
 
 counter = 1
 func_count = {}
-temp_count = 0
+
 
 def println(string):
     global counter
@@ -163,26 +163,24 @@ def goto_and_return(func, label):
     println(f"{label}:")
 
 
-def tac_expr(expr, st):
-    return
+def tac_expr(expr, st, temp_count=0):
 
-    # global temp_count
-    #
-    # if 'value' in expr:
-    #     value = expr['value']
-    #     if not isinstance(value, str) or value[0] == '"':
-    #         return value
-    #     elif isinstance(value, str):
-    #         println(f"T{temp_count} = fp + {st[value][2]}")
-    #         println(f"T{temp_count} = mem[f")
-    #
-    # if 'operator' in expr:
-    #
-    #     left , temp_level = tac_expr(expr['value_left' ], st)
-    #     right, temp_level = tac_expr(expr['value_right'], st)
-    #     println(f"t{temp_level} = {left} + {right}")
-    #
-    # print(value)
+    if 'value' in expr:
+        value = expr['value']
+        if not isinstance(value, str) or value[0] == '"':
+            return value
+        elif isinstance(value, str):
+            offset = "OFFSET"  # TODO: st[value][2]
+            println(f"t{temp_count} = fp + {offset}  // {value}")
+            println(f"t{temp_count} = mem[fp]")
+
+    if 'operator' in expr:
+
+        left  = tac_expr(expr['value_left' ], st, temp_count)
+        right = tac_expr(expr['value_right'], st, temp_count + 1)
+        println(f"t{temp_count} = {left} + {right}")
+
+    return f"t{temp_count}"
 
 
 def tac_stmt(stmt, func_name, st):
@@ -208,10 +206,10 @@ def tac_stmt(stmt, func_name, st):
             printcm()
 
         elif value['token_type'] == 'expr':
-            tac_expr(value, st)
+            value = tac_expr(value, st)
 
-    println(f"t0 = fp + {offset}  // {name}")
-    println(f"mem[t0] = {value}")
+    println(f"t9 = fp + {offset}  // {name}")  # TODO: Be smart about the temp variable here
+    println(f"mem[t9] = {value}")
 
 
 def tac_function(func, st, parent_func=None, parent_level=0):
