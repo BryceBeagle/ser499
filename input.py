@@ -26,15 +26,15 @@ def max_sub_array(array):
             start = i + 1
             cum_sum = 0
 
-    # print("Max sum         {}".format(max_sum))
-    # print("Max start index {}".format(max_start))
-    # print("Max end index   {}".format(max_end))
+    print("Max sum         {}".format(max_sum))
+    print("Max start index {}".format(max_start))
+    print("Max end index   {}".format(max_end))
 
-a = 5
-b = 7
-a = -b
-
-d  = "test string"
+# a = 5
+# b = 7
+# a = -b
+#
+# d  = "test string"
 
 c = [10, 4, 6, -3, 4, -5, -2, 6]
 

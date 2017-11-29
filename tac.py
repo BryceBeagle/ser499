@@ -1,116 +1,85 @@
 NUM_TEMPS = 10
 
-# def create_tac(pt):
-#
-#     for stmt in pt['stmt_list']:
-#         if stmt['token_type'] == 'assign_stmt':
-#             get_tacs(stmt)
-#         elif stmt['token_type'] == 'func_def':
-#             print(f"Label: {stmt['name']}")
-#             create_tac(stmt)
-#             print()
-#         elif stmt['token_type'] == 'for_stmt':
-#             print("FOR STATEMENTS NOT IMPLEMENTED")
-#         else:
-#             print(stmt)
-#
-#
-# def get_tacs(stmt, level=0):
-#
-#     # TODO: Negatives (0 - val)
-#
-#     value = stmt
-#     name = f"t{level - 1}"
-#
-#     if 'value' in stmt:
-#         value = stmt['value']
-#         if 'name' in stmt:
-#             name = stmt['name']
-#
-#     if not isinstance(value, dict):
-#         if stmt['token_type'] == 'value':
-#             return value, level - 1
-#
-#         else:
-#             print(f"{name} = {value}")
-#
-#     elif value['token_type'] == 'expr':
-#         if 'operator' in value:
-#             left , level = get_tacs(value['value_left' ], level + 1)
-#             right, level = get_tacs(value['value_right'], level + 1)
-#             op    = value['operator']
-#             print(f"{name} = {left} {op} {right}")
-#         else:
-#             print(f"Expr Value: {value}")
-#
-#     elif value['token_type'] in ['list', 'tuple']:
-#         # TODO: Expressions in lists use negative temp vars....?
-#         level += 1
-#         pointer = f"t{level}"
-#         level += 1
-#         address = f"t{level}"
-#         print(f"{pointer} = &{name}")
-#         for i, item in enumerate(value['item_list']):
-#             val, level = get_tacs(item)
-#             print(f"{address} = {pointer} + {i * 8}")
-#             print(f"*{address} = {val}")
-#
-#     return name, level
+counter = 1
+func_count = {}
+temp_count = 0
+
+def println(string):
+    global counter
+
+    print(f"{counter:04d}  {string}")
+    counter += 1
 
 
-def printt(string):
-    print(f"\t{string}")
+def printcm(string=""):
+    print(f"----  {string}")
+
+
+def init_memory(size):
+
+    printcm()
+    printcm("// Initializing Memory")
+
+    println(f"int mem[{size}];")
 
 
 def init_registers():
 
-    print()
-    print("// INIT REGISTERS")
+    printcm()
+    printcm("// Initializing Registers")
 
-    print()
-    printt("// Pointers")
-    printt("int *SP = 0x00")
-    printt("int *FP = 0x00")
+    printcm()
+    printcm("// Pointers")
+    println("int sp = 0;")
+    println("int fp = 0;")
 
-    print()
-    printt("// Temp Registers")
+    printcm()
+    printcm("// Temp Registers")
     for i in range(NUM_TEMPS):
-        printt(f"int *T{i} = 0x00")
+        println(f"int t{i};")
 
 
 def init_function():
 
-    print()
-    printt("// Initializing SP and FP for function")
+    printcm()
+    printcm("// Initializing SP and FP for function")
 
-    printt("*SP = FP")
-    printt("SP = SP + 1")
-    printt("FP = SP")
+    println("mem[sp] = fp")
+    println("sp = sp + 1;")
+    println("fp = sp;")
 
 
-def finish_function():
+def finish_function(address=None, parent_func=None, parent_level=0):
 
-    print()
-    printt("//Restoring SP and FP after function")
+    # Main does not go anywhere at completion TODO
+    if parent_func is None:
+        return
 
-    printt("SP = FP")
-    printt("*FP = SP")
-    printt("T0 = *SP")
-    printt("SP = SP - 1")
-    printt("goto T0")
+    printcm()
+    printcm("//Restoring SP and FP after function")
+
+    println("sp = fp")
+    println("mem[fp] = sp")
+    println("t0 = mem[sp]")
+    println("sp = sp - 1")
+
+    if address:
+        println("jump t0")
+    else:
+        println(f"goto {parent_func}_{parent_level}")
 
 
 def init_local_var_space(scope):
 
-    print()
-    print("//INIT LOCAL VARIABLE SPACE")
+    printcm()
+    printcm("// Initialize local variable space")
 
     offset = 1
     for var in scope:
         if isinstance(scope[var], dict):
             continue
 
-        printt(f"SP = SP + 1  // {var}")
+        println(f"sp = sp + 1;  // {var}")
 
         # Store offset in symbol table
         scope[var][2] = offset
@@ -119,28 +88,28 @@ def init_local_var_space(scope):
 
 def push_temps():
 
-    print()
-    printt("// Saving temp registers to stack")
+    printcm()
+    printcm("// Saving temp registers to stack")
 
     for temp in range(NUM_TEMPS):
-        printt(f"*SP = T{temp}")
-        printt("SP = SP + 1")
+        println(f"*sp = t{temp}")
+        println("sp = sp + 1")
 
 
 def pop_temps():
 
-    print()
-    printt("// Restoring temp registers from stack")
+    printcm()
+    printcm("// Restoring temp registers from stack")
 
     for temp in range(NUM_TEMPS):
-        printt("SP = SP - 1")
-        printt(f"T{temp} = *SP")
+        println("sp = sp - 1")
+        println(f"t{temp} = mem[sp]")
 
 
-def push_params(st, params):
+def push_params(params, st):
 
-    print()
-    printt("// Saving parameters to stack")
+    printcm()
+    printcm("// Saving parameters to stack")
 
     for i, param in enumerate(params):
 
@@ -151,58 +120,67 @@ def push_params(st, params):
 
             # Get location of variable on stack  # TODO: Use register table
             offset = st[value][2]
-            printt(f"T0 = FP + {offset}  // {value}")
-            value = "TO"
+            println(f"t0 = fp + {offset}  // {value}")
+            value = "t0"
 
-        printt(f"*SP = {value}")
-        printt("SP = SP + 1")
+        println(f"mem[sp] = {value}")
+        println("sp = sp + 1")
+
+    print(1)
 
 
 def pop_params(params):
 
-    print()
-    printt("// Popping params from stack")
+    printcm()
+    printcm("// Popping params from stack")
 
     for param in params:
-        printt("SP = SP - 1")
+        println("sp = sp - 1")
 
 
 def save_return_label(name):
 
+    global counter
+
     # TODO: Return address instead of label?
-    print()
-    printt("Saving return address")
+    printcm()
+    printcm("// Saving return address")
 
     label = f"{name}_1"
-    printt(f"*SP = {label}")
-    printt("SP = SP + 1")
+    println(f"mem[sp] = {counter + 3}")  # +3: Current line, sp pop, goto
+    println("sp = sp + 1")
 
     return label
 
 
 def goto_and_return(func, label):
 
-    print()
-    printt("Jump to func and return point")
+    printcm()
+    printcm("// Jump to func and return point")
 
-    printt(f"goto {func}_0")
-    print()
-    printt(f"{label}:")
+    println(f"goto {func}_0")
+    printcm()
+    println(f"{label}:")
 
 
-def tac_expr(expr, temp_level=0):
+def tac_expr(expr, st):
     return
 
+    # global temp_count
+    #
     # if 'value' in expr:
     #     value = expr['value']
-    #     if not isinstance(value, str) or not value[0] != '"':
-    #         return value, temp_level - 1
+    #     if not isinstance(value, str) or value[0] == '"':
+    #         return value
+    #     elif isinstance(value, str):
+    #         println(f"T{temp_count} = fp + {st[value][2]}")
+    #         println(f"T{temp_count} = mem[f")
     #
     # if 'operator' in expr:
     #
-    #     left , temp_level = tac_expr(expr['value_left' ], temp_level + 1)
-    #     right, temp_level = tac_expr(expr['value_right'], temp_level + 2)
-    #     printt(f"T{temp_level} = {left} + {right}")
+    #     left , temp_level = tac_expr(expr['value_left' ], st)
+    #     right, temp_level = tac_expr(expr['value_right'], st)
+    #     println(f"t{temp_level} = {left} + {right}")
     #
     # print(value)
 
@@ -218,7 +196,7 @@ def tac_stmt(stmt, func_name, st):
             func = value['func']
 
             push_temps()
-            push_params(st, value["parameters"])
+            push_params(value["parameters"], st)
             label = save_return_label(func_name)
             goto_and_return(func, label)
 
@@ -227,24 +205,32 @@ def tac_stmt(stmt, func_name, st):
 
             value = "*RA"
 
-            print()
+            printcm()
 
         elif value['token_type'] == 'expr':
-            tac_expr(value)
+            tac_expr(value, st)
 
-    printt(f"TO = FP + {offset}  // {name}")
-    printt(f"*TO = {value}")
+    println(f"t0 = fp + {offset}  // {name}")
+    println(f"mem[t0] = {value}")
 
 
-def tac_function(func, st):
+def tac_function(func, st, parent_func=None, parent_level=0):
 
-    print()
+    printcm()
 
     func_name = func['name']
-    print(f"{func_name}_0:")
+
+    if func_name in func_count:
+        level = func_count[func_name]
+        func_count[func_name] += 1
+    else:
+        func_count[func_name] = 0
+        level = 0
+
+    println(f"{func_name}_{level}:")
 
     init_function()
-    print()
+    printcm()
 
     funcs = []
 
@@ -257,11 +243,15 @@ def tac_function(func, st):
 
     for func in funcs:
         name = func['name']
-        tac_function(func, st[name])
+        tac_function(func, st[name], parent_func=func_name,
+                                     parent_level=level)
 
-    finish_function()
+    finish_function(parent_func=parent_func,
+                    parent_level=parent_level)
 
-def create_tac_2(pt, st):
+
+def create_tac(pt, st):
+    init_memory(1000)
     init_registers()
     init_local_var_space(st)
     tac_function(pt, st)

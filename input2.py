@@ -5,3 +5,5 @@ def add(a, b):
 d = 7
 e = 5
 f = add(d, e)
+g = add(d, e)
+
