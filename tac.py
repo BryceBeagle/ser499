@@ -1,3 +1,29 @@
+"""
+Layout of stack
+
+       +-------------------+
+       | saved temps       |
+       | parameters        |
+       | return address    |
+       | saved FP          | <-+
+       | local variables   |   |
+       +-------------------+   |
+       | saved temps       |   |
+       | parameters        |   |  (FP - k)
+       | return address    |   |
+FP --> | saved FP          | --+
+SP --> | local variables   |      (FP + k)
+       +-------------------+
+       | Unused            |
+       | Unused            |
+       | Unused            |
+       | Unused            |
+       | ...               |
+       +-------------------+
+
+"""
+
+
 NUM_TEMPS = 10
 
 counter = 1
@@ -74,16 +100,17 @@ def init_local_var_space(scope):
     printcm()
     printcm("// Initialize local variable space")
 
-    offset = 1
+    offset = 1  # Can't use enumerate because of ignored elements
     for var in scope:
-        if isinstance(scope[var], dict):
+
+        # Ignore vars who already have an offset (params)
+        if isinstance(scope[var], dict) or scope[var] is not None:
             continue
 
-        println(f"sp = sp + 1;  // {var}")
-
-        # Store offset in symbol table
-        scope[var][2] = offset
+        scope[var] = offset
         offset += 1
+
+        println(f"sp = sp + 1;  // {var}")
 
 
 def push_temps():
@@ -107,6 +134,7 @@ def pop_temps():
 
 
 def push_params(params, st):
+    """Push parameters onto stack. Use st to refer to local variable offsets"""
 
     printcm()
     printcm("// Saving parameters to stack")
@@ -119,14 +147,14 @@ def push_params(params, st):
         if isinstance(value, str) and value[0] != '"':
 
             # Get location of variable on stack  # TODO: Use register table
-            offset = st[value][2]
-            println(f"t0 = fp + {offset}  // {value}")
+            offset = st[value]
+            sign = '+' if offset >= 0 else '-'
+
+            println(f"t0 = fp {sign} {abs(offset)}  // {value}")
             value = "t0"
 
         println(f"mem[sp] = {value}")
         println("sp = sp + 1")
-
-    print(1)
 
 
 def pop_params(params):
@@ -156,7 +184,7 @@ def save_return_label(name):
 def goto_and_return(func, label):
 
     printcm()
-    printcm("// Jump to func and return point")
+    printcm("// Jump to func and create return point")
 
     println(f"goto {func}_0")
     printcm()
@@ -170,8 +198,9 @@ def tac_expr(expr, st, temp_count=0):
         if not isinstance(value, str) or value[0] == '"':
             return value
         elif isinstance(value, str):
-            offset = "OFFSET"  # TODO: st[value][2]
-            println(f"t{temp_count} = fp + {offset}  // {value}")
+            offset = st[value]  # TODO: st[value]
+            sign = '+' if offset >= 0 else '-'
+            println(f"t{temp_count} = fp {sign} {abs(offset)}  // {value}")
             println(f"t{temp_count} = mem[fp]")
 
     if 'operator' in expr:
@@ -187,10 +216,14 @@ def tac_stmt(stmt, func_name, st):
 
     name = stmt['name']
     value = stmt['value']  # TODO: Non-literal values
-    offset = st[name][2]
+    offset = st[name]
 
     if isinstance(value, dict):
         if value['token_type'] == "func":
+
+            printcm()
+            printcm(f"// ---> {stmt['value']['func']}()")
+
             func = value['func']
 
             push_temps()
@@ -216,6 +249,11 @@ def tac_function(func, st, parent_func=None, parent_level=0):
 
     printcm()
 
+    # Parameter offsets in st
+    if 'args_list' in func:
+        for i, param in enumerate(func['args_list'][:: -1]):
+            st[param] = -i - 2
+
     func_name = func['name']
 
     if func_name in func_count:
@@ -228,6 +266,7 @@ def tac_function(func, st, parent_func=None, parent_level=0):
     println(f"{func_name}_{level}:")
 
     init_function()
+    init_local_var_space(st)
     printcm()
 
     funcs = []
@@ -251,6 +290,5 @@ def tac_function(func, st, parent_func=None, parent_level=0):
 def create_tac(pt, st):
     init_memory(1000)
     init_registers()
-    init_local_var_space(st)
     tac_function(pt, st)
 

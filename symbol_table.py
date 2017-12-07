@@ -3,7 +3,7 @@ import numbers
 
 def update(dict_, stack, value):
 
-    if not len(stack):
+    if not stack:
         return value
 
     elem = stack.pop(0)
@@ -69,7 +69,7 @@ def create_st(ast):
         for stmt in stmt_list:
             if stmt['token_type'] == 'assign_stmt':
                 val = stmt['value']
-                type_val = [det_type(val), val, None]
+                type_val = [det_type(val), val, None]  # Type, value, offset
                 update(st, funcs + [stmt['name']], type_val)
             elif stmt['token_type'] == 'func_def':
                 funcs.append(stmt['name'])
@@ -93,4 +93,5 @@ def create_st(ast):
         return st
 
     symbol_table = ast_helper(ast)
-    return typed_st(ast, symbol_table)
+    # return typed_st(ast, symbol_table)
+    return symbol_table
