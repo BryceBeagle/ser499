@@ -1,10 +1,10 @@
-def b():
+def mult(a, b):
 
-    def c():
-        d = 240
-        return d
-
-    r = c()
+    r = a * b
     return r
 
-a = b()
+
+c = 5
+d = 15
+
+a = mult(c, d)

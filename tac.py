@@ -164,6 +164,7 @@ def push_params(params, st):
             sign = '+' if offset >= 0 else '-'
 
             println(f"t0 = fp {sign} {abs(offset)};  // {value}")
+            println("t0 = mem[t0];")
             value = "t0"
 
         println(f"mem[sp] = {value};")
@@ -226,13 +227,16 @@ def tac_expr(expr, st, temp_count=0):
             offset = st[value]  # TODO: st[value]
             sign = '+' if offset >= 0 else '-'
             println(f"t{temp_count} = fp {sign} {abs(offset)};  // {value}")
-            println(f"t{temp_count} = mem[fp];")
+            println(f"t{temp_count} = mem[t{temp_count}];")
 
     if 'operator' in expr:
 
         left  = tac_expr(expr['value_left' ], st, temp_count)
         right = tac_expr(expr['value_right'], st, temp_count + 1)
-        println(f"t{temp_count} = {left} + {right};")
+
+        op = expr['operator']
+
+        println(f"t{temp_count} = {left} {op} {right};")
 
     return f"t{temp_count}"
 
@@ -271,12 +275,13 @@ def tac_stmt(stmt, func_name, st, func_count_parent):
 
             func_count_parent[func][1] += 1
 
+            return
+
         elif value['token_type'] == 'expr':
             value = tac_expr(value, st)
 
-    else:
-        println(f"t9 = fp + {offset};  // {name}")  # TODO: Be smart about the temp variable here
-        println(f"mem[t9] = {value};")
+    println(f"t9 = fp + {offset};  // {name}")  # TODO: Be smart about the temp variable here
+    println(f"mem[t9] = {value};")
 
 
 def tac_return(stmt, st):
