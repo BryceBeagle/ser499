@@ -149,8 +149,13 @@ def p_func_def(p):
 
 
 def p_parameters(p):
-    """parameters : LPAREN args_list RPAREN"""
-    p[0] = p[2]
+    """parameters : LPAREN args_list RPAREN
+                  | LPAREN RPAREN"""
+    if len(p) == 4:
+        p[0] = p[2]
+    else:
+        p[0] = {'token_type' : 'args_list',
+                'args_list'  : []     }
 
 
 def p_args_list(p):
@@ -227,9 +232,14 @@ def p_list(p):
 
 
 def p_tuple(p):
-    """tuple : LPAREN item_list RPAREN"""
-    p[0] = {'token_type' : 'tuple'          ,
-            'item_list'  : p[2]['item_list']}
+    """tuple : LPAREN item_list RPAREN
+             | LPAREN RPAREN"""
+    if len(p) == 4:
+        p[0] = {'token_type' : 'tuple'          ,
+                'item_list'  : p[2]['item_list']}
+    else:
+        p[0] = {'token_type' : 'tuple',
+                'item_list'  : []}
 
 
 def p_dict(p):
@@ -325,12 +335,12 @@ def p_trailer(p):
     """trailer : DOT NAME
                | tuple
                | list"""
-    if len(p) == 3:
-        p[0] = {'token_type' : "dot",
-                'name'       : p[2] }
-    elif p[1]["token_type"] == 'tuple':
+    if p[1]["token_type"] == 'tuple':
         p[0] = {'token_type' : "func",
                 'parameters' : p[1]['item_list']}
+    elif len(p) == 3:
+        p[0] = {'token_type' : "dot",
+                'name'       : p[2] }
     elif p[1]["token_type"] == 'list':
         p[0] = {'token_type' : "get_attr",
                 'parameters' : p[1]['item_list']}

@@ -1,14 +1,10 @@
-def add(a, b):
+def b():
 
-    def minus(x, y):
-        v = x - y
-        return v
+    def c():
+        d = 240
+        return d
 
-    p = minus(a, b)
-    s = a + b
-    return s
+    r = c()
+    return r
 
-d = 7
-e = 5
-f = add(d, e)
-
+a = b()
