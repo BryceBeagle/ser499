@@ -358,7 +358,7 @@ def getParseTree():
 
     try:
 
-        with open("input2.py") as fi:
+        with open("test_files/input3.py") as fi:
             s = "\n".join(fi.readlines()) + "\u0004"
         # result = parser.parse(s, lexer=lexer, debug=True)
         result = parser.parse(s, lexer=lexer)

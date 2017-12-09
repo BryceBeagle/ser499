@@ -8,3 +8,6 @@ c = 5
 d = 15
 
 a = mult(c, d)
+
+
+# Output = 75 @ mem[3]
