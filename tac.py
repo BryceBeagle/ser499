@@ -284,6 +284,65 @@ def tac_stmt(stmt, func_name, st, func_count_parent):
     println(f"mem[t9] = {value};")
 
 
+def tac_for(stmt, func_name, st, func_count_scope):
+
+    printcm()
+
+    var_list  = stmt['expr_list']
+    iterator  = stmt['iterator']['value']
+    stmt_list = stmt['stmt_list']
+
+    if len(var_list) > 1:
+        raise NotImplementedError
+    else:
+        var = var_list[0]
+
+    # Not iterating over a variable
+    if isinstance(iterator, dict):
+
+        if iterator['token_type'] == 'func':
+
+            params = []
+            for param in iterator['parameters']:
+                value = param['value']
+
+                # Function calls and variables not supported here yet
+                if not isinstance(value, int):
+                    raise NotImplementedError
+                else:
+                    params.append(value)
+
+            if iterator['func'] == 'range':
+
+                min_ = 0             if len(params) == 1 else params[0]
+                max_ = params[1] - 1 if len(params)  > 1 else params[0] - 1
+                step = params[2]     if len(params) == 3 else 1
+
+                # TODO: Nested for statements
+                # TODO: Descreasing loops (ie. step < 0)
+                # TODO: Iterator declared before loop
+                printcm("// For loop")
+                println(f"int {var} = {min_};")
+                printcm()
+                println("for_0:")
+                println(f"if ({var} > {max_}) goto for_0e;")
+                printcm()
+
+                for stmt in stmt_list:
+                    tac_stmt(stmt, func_name, st, func_count_scope)
+
+                println(f"{var} = {var} + {step};")
+                println("goto for_0;")
+                println("for_0e:")
+
+            else:
+                raise NotImplementedError
+        else:
+            raise NotImplementedError
+    else:
+        raise NotImplementedError
+
+
 def tac_return(stmt, st):
 
     printcm()
@@ -327,6 +386,12 @@ def tac_function(func, st, instance=0, func_count_parent={}):
 
         elif stmt['token_type'] == 'return':
             tac_return(stmt, st)
+
+        elif stmt['token_type'] == 'for_stmt':
+            tac_for(stmt, func_name, st, func_count_scope)
+
+        else:
+            raise NotImplementedError
 
     # Rewind stack
     finish_function(func_name, instance)
