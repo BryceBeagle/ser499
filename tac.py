@@ -243,9 +243,12 @@ def tac_expr(expr, st, temp_count=0):
 
 def tac_stmt(stmt, func_name, st, func_count_parent):
 
-    name = stmt['name']
+    if 'name' in stmt:
+        assign_name = stmt['name']
+        offset = st[assign_name]
+    else:
+        assign_name = None
     value = stmt['value']  # TODO: Non-literal values
-    offset = st[name]
 
     if isinstance(value, dict):
         if value['token_type'] == "func":
@@ -265,8 +268,10 @@ def tac_stmt(stmt, func_name, st, func_count_parent):
             goto_and_return(label)
 
             value_ = pop_return()
-            println(f"t9 = fp + {offset};  // {name}")
-            println(f"mem[t9] = {value_};")  # _ is dumb
+
+            if assign_name is not None:
+                println(f"t9 = fp + {offset};  // {assign_name}")
+                println(f"mem[t9] = {value_};")  # _ is dumb
 
             pop_params(value["parameters"])
             pop_temps()
@@ -280,8 +285,12 @@ def tac_stmt(stmt, func_name, st, func_count_parent):
         elif value['token_type'] == 'expr':
             value = tac_expr(value, st)
 
-    println(f"t9 = fp + {offset};  // {name}")  # TODO: Be smart about the temp variable here
-    println(f"mem[t9] = {value};")
+        else:
+            raise NotImplementedError
+
+    if assign_name is not None:
+        println(f"t9 = fp + {offset};  // {assign_name}")  # TODO: Be smart about the temp variable here
+        println(f"mem[t9] = {value};")
 
 
 def tac_for(stmt, func_name, st, func_count_scope):
@@ -343,6 +352,9 @@ def tac_for(stmt, func_name, st, func_count_scope):
         raise NotImplementedError
 
 
+def tac_print()
+
+
 def tac_return(stmt, st):
 
     printcm()
@@ -364,6 +376,9 @@ def tac_function(func, st, instance=0, func_count_parent={}):
         for i, param in enumerate(func['args_list'][:: -1]):
             st[param] = -i - 2
 
+    if func in ['print']:
+        tac_print(instance)
+        return
     func_name = func['name']
 
     println(f"{func_name}_{instance}:", tab=False)
@@ -390,6 +405,11 @@ def tac_function(func, st, instance=0, func_count_parent={}):
         elif stmt['token_type'] == 'for_stmt':
             tac_for(stmt, func_name, st, func_count_scope)
 
+        elif stmt['token_type'] == 'value':
+            if isinstance(stmt, dict):
+                tac_stmt(stmt, func_name, st, func_count_scope)
+            else:
+                raise NotImplementedError
         else:
             raise NotImplementedError
 
@@ -407,7 +427,13 @@ def tac_function(func, st, instance=0, func_count_parent={}):
             start = 0
         end = func_count_scope[func_name][1]
         for instance in range(start, end):
-            tac_function(func_count_scope[func_name][0], st[func_name], instance)
+            if func_name in ['print']:
+                stmt_child = 'print'
+                st_child   = {'_print' : 1}
+            else:
+                stmt_child = func_count_scope[func_name][0]
+                st_child   = st[func_name]
+            tac_function(stmt_child, st_child, instance)
         func_count_parent[func_name][1] = end
 
 
